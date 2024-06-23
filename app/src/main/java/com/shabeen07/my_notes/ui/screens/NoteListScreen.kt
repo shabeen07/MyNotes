@@ -20,31 +20,45 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.shabeen07.my_notes.models.NoteDto
+import com.shabeen07.my_notes.viewmodels.NoteViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NoteListScreen(navController: NavHostController, notesList: MutableList<NoteDto>) {
+fun NoteListScreen(
+    navController: NavHostController,
+    noteViewModel: NoteViewModel
+) {
+    val notesList = noteViewModel.allNotes.observeAsState().value ?: emptyList()
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(title = {
-                Text(text = "My Notes", textAlign = TextAlign.Center)
-            })
+            TopAppBar(
+                title = {
+                    Text(text = "My Notes", textAlign = TextAlign.Center)
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                ),
+            )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                navController.navigate(Screens.AddNotes.route)
+                navController.navigate(route = Screens.AddNotes.passNoteId())
             }) {
                 Icon(Icons.Default.Edit, contentDescription = "Add Note")
             }
@@ -53,25 +67,27 @@ fun NoteListScreen(navController: NavHostController, notesList: MutableList<Note
         LazyVerticalStaggeredGrid(
             modifier = Modifier.padding(innerPadding),
             columns = StaggeredGridCells.Fixed(2),
-            verticalItemSpacing = 4.dp,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalItemSpacing = 2.dp,
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             items(notesList) { note ->
-                NoteItem(note = note)
+                NoteItem(note = note,navController)
             }
         }
     }
 }
 
 @Composable
-fun NoteItem(note: NoteDto) {
+fun NoteItem(note: NoteDto, navController: NavHostController) {
     val simpleDateFormat = SimpleDateFormat("dd-MM-yyyy hh:mm:ss", Locale.getDefault())
     val formattedDate = simpleDateFormat.format(Date(note.createdAt))
     Card(
         modifier = Modifier
             .padding(8.dp)
             .clickable {
-                //TODO
+                note.noteId?.let {
+                    navController.navigate(route = Screens.AddNotes.passNoteId(it,note.note))
+                }
             }
             .clipToBounds()
     ) {

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,15 +27,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.shabeen07.my_notes.models.NoteDto
+import com.shabeen07.my_notes.respository.NoteRepository
+import com.shabeen07.my_notes.respository.database.AppDatabase
 import com.shabeen07.my_notes.ui.theme.MyNotesTheme
 import com.shabeen07.my_notes.ui.theme.Typography
+import com.shabeen07.my_notes.viewmodels.NoteViewModel
+import com.shabeen07.my_notes.viewmodels.NoteViewModelFactory
 
 class MainActivity : ComponentActivity() {
     private lateinit var navController: NavHostController
-    var notesList: MutableList<NoteDto> = mutableListOf()
+    private val noteViewModel: NoteViewModel by viewModels<NoteViewModel> {
+        NoteViewModelFactory((application as NotesApp).repository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +50,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyNotesTheme {
                 navController = rememberNavController()
-                SetUpNavGraph(navController = navController, notesList)
+                SetUpNavGraph(navController = navController, noteViewModel)
             }
         }
     }
@@ -52,7 +60,9 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(innerPadding: PaddingValues) {
     var value by remember { mutableStateOf(false) }
     Column(
-        modifier = Modifier.fillMaxSize().padding(innerPadding),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
